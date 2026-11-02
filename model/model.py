@@ -35,7 +35,30 @@ class DepositoStrumenti:
             Funzione che legge tutti gli strumenti nel database
             :return: una lista con tutti gli strumenti presenti oppure None
         """
-        # TODO
+        cnx = get_connection()
+        if cnx is None:
+            return None
+
+        cursor = cnx.cursor(dictionary=True)
+        query = "SELECT * FROM strumento"
+        cursor.execute(query)
+
+        strumenti = []
+        for row in cursor:
+            # Creazione dell'oggetto Strumento a partire dai campi del DB
+            s = Strumento(
+                codice=row["codice"],
+                tipo=row["tipo"],
+                marca=row["marca"],
+                anno_acquisto=row["anno_acquisto"],
+                valore=row["valore"],
+                disponibile=bool(row["disponibile"]) if "disponibile" in row else True
+            )
+            strumenti.append(s)
+
+        cursor.close()
+        cnx.close()
+        return strumenti
 
     def cerca_strumenti_per_tipo(self, tipo) -> list[Strumento] | None:
         """
@@ -43,4 +66,27 @@ class DepositoStrumenti:
             :param tipo: il tipo dello strumento (es. "Chitarra")
             :return: una lista con tutti gli strumenti del tipo indicato oppure None
         """
-        # TODO
+        cnx = get_connection()
+        if cnx is None:
+            return None
+
+        cursor = cnx.cursor(dictionary=True)
+        # Usiamo LOWER per rendere la ricerca case-insensitive
+        query = "SELECT * FROM strumento WHERE LOWER(tipo) = LOWER(%s)"
+        cursor.execute(query, (tipo.strip(),))
+
+        strumenti = []
+        for row in cursor:
+            s = Strumento(
+                codice=row["codice"],
+                tipo=row["tipo"],
+                marca=row["marca"],
+                anno_acquisto=row["anno_acquisto"],
+                valore=row["valore"],
+                disponibile=bool(row["disponibile"]) if "disponibile" in row else True
+            )
+            strumenti.append(s)
+
+        cursor.close()
+        cnx.close()
+        return strumenti
